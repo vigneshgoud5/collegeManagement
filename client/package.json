@@ -8,7 +8,8 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"test": "vitest",
-		"test:run": "vitest run"
+		"test:run": "vitest run",
+		"test:serial": "vitest run --no-threads"
 	},
 	"dependencies": {
 		"axios": "^1.7.7",
