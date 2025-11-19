@@ -3,6 +3,7 @@ import { listFaculty, setFacultyStatus, deleteFaculty } from '../api/faculty';
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { AcademicNav } from '../components/AcademicNav';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useAuthStore } from '../store/auth';
 
 export function FacultyList() {
@@ -11,6 +12,11 @@ export function FacultyList() {
   const isAdministrator = user?.subRole === 'administrative';
   const [q, setQ] = useState('');
   const [department, setDepartment] = useState('');
+  const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+    isOpen: false,
+    id: '',
+    name: '',
+  });
 
   const { data: faculty, isLoading } = useQuery({
     queryKey: ['faculty', { q, department }],
@@ -27,16 +33,23 @@ export function FacultyList() {
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteFaculty(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['faculty'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['faculty'] });
+      setDeleteModal({ isOpen: false, id: '', name: '' });
+    },
   });
 
-  function handleDelete(id: string, name: string) {
+  function handleDeleteClick(id: string, name: string) {
     if (String(id) === String(user?.id)) {
       alert('Cannot delete your own account');
       return;
     }
-    if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
-      deleteMutation.mutate(id);
+    setDeleteModal({ isOpen: true, id, name });
+  }
+
+  function handleConfirmDelete() {
+    if (deleteModal.id) {
+      deleteMutation.mutate(deleteModal.id);
     }
   }
 
@@ -225,7 +238,7 @@ export function FacultyList() {
                             Edit
                           </Link>
                           <button
-                            onClick={() => handleDelete(f._id, f.name || f.email)}
+                            onClick={() => handleDeleteClick(f._id, f.name || f.email)}
                             disabled={deleteMutation.isPending || String(f._id) === String(user?.id)}
                             style={{
                               padding: '4px 12px',
@@ -258,6 +271,15 @@ export function FacultyList() {
           )}
         </div>
       </div>
+      <ConfirmDeleteModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => setDeleteModal({ isOpen: false, id: '', name: '' })}
+        onConfirm={handleConfirmDelete}
+        title="Delete Faculty"
+        message="Are you sure you want to delete this faculty member?"
+        itemName={deleteModal.name}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

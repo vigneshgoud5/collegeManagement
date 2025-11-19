@@ -1,13 +1,10 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import { join } from 'path';
 
 // Load .env from server root directory
-dotenv.config({ path: join(__dirname, '../../.env') });
+// Use process.cwd() which works in both ESM and Jest environments
+dotenv.config({ path: join(process.cwd(), '.env') });
 
 const envSchema = z.object({
   PORT: z.string().default('5000'),

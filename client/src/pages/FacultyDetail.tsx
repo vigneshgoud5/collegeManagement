@@ -2,7 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getFaculty, deleteFaculty } from '../api/faculty';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AcademicNav } from '../components/AcademicNav';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useAuthStore } from '../store/auth';
+import { useState } from 'react';
 
 export function FacultyDetail() {
   const params = useParams();
@@ -16,6 +18,8 @@ export function FacultyDetail() {
     queryFn: () => getFaculty(id),
   });
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteFaculty(id),
     onSuccess: () => {
@@ -24,14 +28,16 @@ export function FacultyDetail() {
     },
   });
 
-  function handleDelete() {
+  function handleDeleteClick() {
     if (String(id) === String(user?.id)) {
       alert('Cannot delete your own account');
       return;
     }
-    if (window.confirm(`Are you sure you want to delete ${faculty?.name || faculty?.email}? This action cannot be undone.`)) {
-      deleteMutation.mutate(id);
-    }
+    setShowDeleteModal(true);
+  }
+
+  function handleConfirmDelete() {
+    deleteMutation.mutate(id);
   }
 
   if (isLoading)
@@ -71,7 +77,7 @@ export function FacultyDetail() {
                 Edit Faculty
               </Link>
               <button
-                onClick={handleDelete}
+                onClick={handleDeleteClick}
                 disabled={deleteMutation.isPending || String(id) === String(user?.id)}
                 style={{
                   padding: '10px 20px',
@@ -177,6 +183,15 @@ export function FacultyDetail() {
           </div>
         </div>
       </div>
+      <ConfirmDeleteModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleConfirmDelete}
+        title="Delete Faculty"
+        message="Are you sure you want to delete this faculty member?"
+        itemName={faculty ? (faculty.name || faculty.email) : ''}
+        isDeleting={deleteMutation.isPending}
+      />
     </div>
   );
 }

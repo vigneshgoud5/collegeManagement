@@ -3,6 +3,7 @@ import { listStudents, setStudentStatus, deleteStudent } from '../api/adminStude
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { AcademicNav } from '../components/AcademicNav';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useAuthStore } from '../store/auth';
 
 export function StudentsList() {
@@ -12,6 +13,11 @@ export function StudentsList() {
 	const [q, setQ] = useState('');
 	const [department, setDepartment] = useState('');
 	const [year, setYear] = useState('');
+	const [deleteModal, setDeleteModal] = useState<{ isOpen: boolean; id: string; name: string }>({
+		isOpen: false,
+		id: '',
+		name: '',
+	});
 	
 	const { data: students, isLoading } = useQuery({ 
 		queryKey: ['admin-students', { q, department, year }], 
@@ -29,12 +35,19 @@ export function StudentsList() {
 
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => deleteStudent(id),
-		onSuccess: () => qc.invalidateQueries({ queryKey: ['admin-students'] }),
+		onSuccess: () => {
+			qc.invalidateQueries({ queryKey: ['admin-students'] });
+			setDeleteModal({ isOpen: false, id: '', name: '' });
+		},
 	});
 
-	function handleDelete(id: string, name: string) {
-		if (window.confirm(`Are you sure you want to delete ${name}? This action cannot be undone.`)) {
-			deleteMutation.mutate(id);
+	function handleDeleteClick(id: string, name: string) {
+		setDeleteModal({ isOpen: true, id, name });
+	}
+
+	function handleConfirmDelete() {
+		if (deleteModal.id) {
+			deleteMutation.mutate(deleteModal.id);
 		}
 	}
 
@@ -230,7 +243,7 @@ export function StudentsList() {
 														Edit
 													</Link>
 													<button
-														onClick={() => handleDelete(s._id, `${s.firstName} ${s.lastName}`)}
+														onClick={() => handleDeleteClick(s._id, `${s.firstName} ${s.lastName}`)}
 														disabled={deleteMutation.isPending}
 														style={{
 															padding: '4px 12px',
@@ -259,6 +272,15 @@ export function StudentsList() {
 					)}
 				</div>
 			</div>
+			<ConfirmDeleteModal
+				isOpen={deleteModal.isOpen}
+				onClose={() => setDeleteModal({ isOpen: false, id: '', name: '' })}
+				onConfirm={handleConfirmDelete}
+				title="Delete Student"
+				message="Are you sure you want to delete this student?"
+				itemName={deleteModal.name}
+				isDeleting={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

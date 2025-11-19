@@ -2,7 +2,9 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getStudent, deleteStudent } from '../api/adminStudents';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { AcademicNav } from '../components/AcademicNav';
+import { ConfirmDeleteModal } from '../components/ConfirmDeleteModal';
 import { useAuthStore } from '../store/auth';
+import { useState } from 'react';
 
 export function StudentDetail() {
 	const params = useParams();
@@ -13,6 +15,8 @@ export function StudentDetail() {
 	const isAdministrator = user?.subRole === 'administrative';
 	const { data: profile, isLoading, error } = useQuery({ queryKey: ['admin-student', id], queryFn: () => getStudent(id) });
 
+	const [showDeleteModal, setShowDeleteModal] = useState(false);
+
 	const deleteMutation = useMutation({
 		mutationFn: (id: string) => deleteStudent(id),
 		onSuccess: () => {
@@ -21,10 +25,12 @@ export function StudentDetail() {
 		},
 	});
 
-	function handleDelete() {
-		if (window.confirm(`Are you sure you want to delete ${profile?.firstName} ${profile?.lastName}? This action cannot be undone.`)) {
-			deleteMutation.mutate(id);
-		}
+	function handleDeleteClick() {
+		setShowDeleteModal(true);
+	}
+
+	function handleConfirmDelete() {
+		deleteMutation.mutate(id);
 	}
 
 	if (isLoading) return (
@@ -62,7 +68,7 @@ export function StudentDetail() {
 								Edit Student
 							</Link>
 							<button
-								onClick={handleDelete}
+								onClick={handleDeleteClick}
 								disabled={deleteMutation.isPending}
 								style={{
 									padding: '10px 20px',
@@ -113,6 +119,15 @@ export function StudentDetail() {
 					</div>
 				</div>
 			</div>
+			<ConfirmDeleteModal
+				isOpen={showDeleteModal}
+				onClose={() => setShowDeleteModal(false)}
+				onConfirm={handleConfirmDelete}
+				title="Delete Student"
+				message="Are you sure you want to delete this student?"
+				itemName={profile ? `${profile.firstName} ${profile.lastName}` : ''}
+				isDeleting={deleteMutation.isPending}
+			/>
 		</div>
 	);
 }

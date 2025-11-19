@@ -1,18 +1,10 @@
 import request from 'supertest';
 import app from '../src/index.js';
-import { connectDB } from '../src/config/database.js';
 import { User } from '../src/models/User.js';
 import { hashPassword } from '../src/services/authService.js';
 
 describe('Auth flows', () => {
-  beforeAll(async () => {
-    process.env.NODE_ENV = 'test';
-    await connectDB();
-  });
-
-  afterAll(async () => {
-    await (await import('mongoose')).default.connection.close();
-  });
+  // MongoDB connection is handled by setup.ts
 
   beforeEach(async () => {
     await User.deleteMany({});
@@ -30,7 +22,7 @@ describe('Auth flows', () => {
     expect(res.body.user).toBeDefined();
     expect(res.body.user.role).toBe('student');
     // Cookies should be set
-    const cookies = res.header['set-cookie'] || [];
+    const cookies = (res.header['set-cookie'] || []) as string[];
     expect(cookies.join(';')).toContain('access_token');
     expect(cookies.join(';')).toContain('refresh_token');
   });
