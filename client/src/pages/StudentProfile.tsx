@@ -60,11 +60,12 @@ export function StudentProfile() {
       <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
         <h1 style={{ marginBottom: 24 }}>My Profile</h1>
         <div style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--bg-card)',
           borderRadius: 8,
           padding: 24,
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           marginTop: 24,
+          border: `1px solid var(--border-color)`,
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 24, marginBottom: 32 }}>
             {profile.avatarUrl ? (
@@ -104,28 +105,28 @@ export function StudentProfile() {
               )}
             </div>
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
             <label style={{ display: 'block', color: '#6c757d', fontSize: 14, marginBottom: 4 }}>First Name</label>
             <div style={{ fontSize: 16, fontWeight: '500' }}>{profile.firstName}</div>
           </div>
-          <div style={{ marginBottom: 16 }}>
+          <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
             <label style={{ display: 'block', color: '#6c757d', fontSize: 14, marginBottom: 4 }}>Last Name</label>
             <div style={{ fontSize: 16, fontWeight: '500' }}>{profile.lastName}</div>
           </div>
           {profile.dob && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
               <label style={{ display: 'block', color: '#6c757d', fontSize: 14, marginBottom: 4 }}>Date of Birth</label>
               <div style={{ fontSize: 16, fontWeight: '500' }}>{new Date(profile.dob).toLocaleDateString()}</div>
             </div>
           )}
           {profile.department && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
               <label style={{ display: 'block', color: '#6c757d', fontSize: 14, marginBottom: 4 }}>Department</label>
               <div style={{ fontSize: 16, fontWeight: '500' }}>{profile.department}</div>
             </div>
           )}
           {profile.year && (
-            <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 16, padding: 12, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
               <label style={{ display: 'block', color: '#6c757d', fontSize: 14, marginBottom: 4 }}>Year</label>
               <div style={{ fontSize: 16, fontWeight: '500' }}>Year {profile.year}</div>
             </div>

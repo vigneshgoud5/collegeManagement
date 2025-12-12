@@ -463,7 +463,7 @@ select.form-control {
 
 .nav-link:hover {
   background-color: rgba(255, 255, 255, 0.1);
-  color: white;
+  color: black;
 }
 
 .nav-link.active {
@@ -527,6 +527,51 @@ select.form-control {
   border-radius: 4px;
   text-transform: capitalize;
   display: inline;
+}
+
+/* Portal banner (post-login) */
+.portal-banner {
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  background-color: #ffffff;
+  text-align: center;
+}
+
+.portal-banner__image {
+  width: 100%;
+  max-width: 720px;
+  height: auto;
+  display: block;
+  margin: 0 auto;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.portal-banner__title {
+  background-color: var(--nav-color);
+  color: white;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  margin: 0;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: 0;
+  display: block;
+}
+
+@media (max-width: 600px) {
+  .portal-banner {
+    padding: 0;
+  }
+
+  .portal-banner__title {
+    font-size: 1.1rem;
+  }
+
+  .portal-banner__image {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 768px) {
@@ -832,7 +877,7 @@ select.form-control {
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   text-decoration: none;
-  color: var(--text-primary);
+  color: #0f172a;
 }
 
 .quick-action-icon {

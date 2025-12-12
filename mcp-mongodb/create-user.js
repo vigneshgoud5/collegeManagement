@@ -10,8 +10,8 @@ import { MongoClient } from 'mongodb';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017';
 const DB_NAME = 'college_portal';
-const USERNAME = 'mcp_user';
-const PASSWORD = process.env.MCP_PASSWORD || 'mcp_secure_password_2024';
+const USERNAME = 'vigneshGoud';
+const PASSWORD = process.env.MCP_PASSWORD || '23831a05a2';
 
 async function createUser() {
   let client;

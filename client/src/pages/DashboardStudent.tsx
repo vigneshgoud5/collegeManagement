@@ -21,7 +21,7 @@ export function DashboardStudent() {
           <p>Loading...</p>
         ) : profile ? (
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-card)',
             borderRadius: 8,
             padding: 24,
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
@@ -52,24 +52,24 @@ export function DashboardStudent() {
             </div>
             
             <div style={{ marginTop: 24, display: 'grid', gap: 16 }}>
-              <div style={{ padding: 16, backgroundColor: '#f8f9fa', borderRadius: 4 }}>
+              <div style={{ padding: 16, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                 <strong>Email:</strong> {user?.email || 'N/A'}
               </div>
               
               {profile.department && (
-                <div style={{ padding: 16, backgroundColor: '#f8f9fa', borderRadius: 4 }}>
+                <div style={{ padding: 16, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                   <strong>Department:</strong> {profile.department}
                 </div>
               )}
               
               {profile.year && (
-                <div style={{ padding: 16, backgroundColor: '#f8f9fa', borderRadius: 4 }}>
+                <div style={{ padding: 16, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                   <strong>Year:</strong> {profile.year}
                 </div>
               )}
               
               {profile.contact?.phone && (
-                <div style={{ padding: 16, backgroundColor: '#f8f9fa', borderRadius: 4 }}>
+                <div style={{ padding: 16, backgroundColor: 'var(--bg-tertiary)', borderRadius: 6, border: '1px solid var(--border-color)' }}>
                   <strong>Phone:</strong> {profile.contact.phone}
                 </div>
               )}
@@ -106,7 +106,7 @@ export function DashboardStudent() {
           </div>
         ) : (
           <div style={{
-            backgroundColor: 'white',
+            backgroundColor: 'var(--bg-card)',
             borderRadius: 8,
             padding: 24,
             boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
