@@ -30,21 +30,21 @@ export async function loginService(params: {
   const accessToken = signAccessToken(user.id, user.role);
   const refreshToken = signRefreshToken(user.id, user.role);
 
-      return {
+  return {
         ok: true as const,
-        user: { 
+    user: {
           id: user.id, 
-          email: user.email, 
-          role: user.role, 
+      email: user.email,
+      role: user.role,
           subRole: user.subRole,
           name: user.name,
           avatarUrl: user.avatarUrl,
           department: user.department,
           contact: user.contact,
-        },
-        accessToken,
-        refreshToken,
-      };
+    },
+    accessToken,
+    refreshToken,
+  };
 }
 
 export async function refreshService(token: string) {
@@ -60,12 +60,12 @@ export async function refreshService(token: string) {
 
   const accessToken = signAccessToken(user.id, user.role);
   const refreshToken = signRefreshToken(user.id, user.role);
-      return {
+  return {
         ok: true as const,
-        user: { 
+    user: {
           id: user.id, 
-          email: user.email, 
-          role: user.role, 
+      email: user.email,
+      role: user.role,
           subRole: user.subRole,
           name: user.name,
           avatarUrl: user.avatarUrl,
@@ -74,7 +74,7 @@ export async function refreshService(token: string) {
         },
         accessToken,
         refreshToken,
-      };
+  };
 }
 
 export async function hashPassword(plain: string): Promise<string> {

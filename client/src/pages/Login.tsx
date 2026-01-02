@@ -24,7 +24,31 @@ export function Login() {
       const redirect = location.state?.from?.pathname || to;
       navigate(redirect, { replace: true });
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Login failed');
+      let errorMessage = 'Login failed';
+      
+      if (err?.response?.data) {
+        // Handle validation errors with details
+        if (err.response.data.details && Array.isArray(err.response.data.details) && err.response.data.details.length > 0) {
+          const errorMessages = err.response.data.details.map((detail: any) => {
+            const field = detail.field || detail.param || 'Field';
+            const message = detail.message || detail.msg || 'Invalid value';
+            const formattedField = field
+              .charAt(0)
+              .toUpperCase() + 
+              field.slice(1)
+                .replace(/([A-Z])/g, ' $1');
+            return `• ${formattedField}: ${message}`;
+          });
+          errorMessage = 'Please fix the following errors:\n' + errorMessages.join('\n');
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      console.error('Login error:', err);
     } finally {
       setLoading(false);
     }
@@ -40,7 +64,20 @@ export function Login() {
         </div>
         <form onSubmit={onSubmit}>
           {error && (
-            <div className="alert alert-danger" role="alert">
+            <div 
+              className="alert alert-danger" 
+              role="alert"
+              style={{ 
+                padding: '12px 16px',
+                backgroundColor: '#fee',
+                border: '1px solid #fcc',
+                borderRadius: '4px',
+                color: '#c33',
+                whiteSpace: 'pre-line',
+                fontSize: '14px',
+                lineHeight: '1.5',
+              }}
+            >
               {error}
             </div>
           )}

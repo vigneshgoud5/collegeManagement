@@ -28,8 +28,8 @@ export function AcademicSettings() {
   return (
     <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
       <AcademicNav />
-      <div style={{ padding: 24, maxWidth: 480, margin: '0 auto' }}>
-        <h2>Change Password</h2>
+      <div style={{ padding: 24, maxWidth: 480, margin: '0 auto' ,backgroundColor: 'lightblue'}}>
+        <h2 style={{padding: '10px 20px',backgroundColor: 'lightgreen'}}>Change Password</h2>
         <div style={{
           backgroundColor: 'white',
           borderRadius: 8,

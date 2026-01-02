@@ -55,10 +55,10 @@ export function StudentProfile() {
   if (!profile) return null;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'lightblue' }}>
       <StudentNav />
       <div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
-        <h1 style={{ marginBottom: 24 }}>My Profile</h1>
+        <h1 style={{ marginBottom: 24 ,padding: '10px 20px',backgroundColor: 'lightgreen'}}>My Profile</h1>
         <div style={{
           backgroundColor: 'var(--bg-card)',
           borderRadius: 8,

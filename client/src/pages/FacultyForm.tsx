@@ -17,6 +17,7 @@ export function FacultyForm() {
 
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string>('');
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (data?.avatarUrl) {
@@ -33,6 +34,21 @@ export function FacultyForm() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['faculty'] });
       navigate('/academic/faculty');
+    },
+    onError: (err: any) => {
+      let errorMessage = 'Failed to save faculty';
+      if (err?.response?.data) {
+        // Handle validation errors
+        if (err.response.data.details && Array.isArray(err.response.data.details)) {
+          errorMessage = err.response.data.details.map((d: any) => d.message).join(', ');
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      setError(errorMessage);
+      console.error('Faculty save error:', err);
     },
   });
 
@@ -53,23 +69,23 @@ export function FacultyForm() {
     }
   }
 
-  function handleAvatarUrlChange(url: string) {
-    setAvatarPreview(url);
-    setAvatarUrl(url);
-  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
     const form = e.target as HTMLFormElement;
     const fd = new FormData(form);
     const payload: any = Object.fromEntries(fd.entries());
     
     if (!isEdit) {
-      if (!payload.email || !payload.password || !payload.subRole || !payload.name) return;
+      if (!payload.email || !payload.password || !payload.subRole || !payload.name) {
+        setError('Email, password, sub-role, and name are required');
+        return;
+      }
     }
     
     payload.avatarUrl = avatarUrl || undefined;
-    if (!payload.department) payload.department = undefined;
+    if (!payload.department || payload.department === '') payload.department = undefined;
     
     mutation.mutate(payload);
   }
@@ -86,6 +102,18 @@ export function FacultyForm() {
           boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
           marginTop: 24,
         }}>
+          {error && (
+            <div style={{
+              backgroundColor: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: 4,
+              padding: 12,
+              marginBottom: 16,
+              color: '#c33',
+            }}>
+              {error}
+            </div>
+          )}
           <form onSubmit={onSubmit}>
             {!isEdit && (
               <>
@@ -141,17 +169,7 @@ export function FacultyForm() {
                 type="file"
                 accept="image/*"
                 onChange={handleImageUpload}
-                style={{ width: '100%', padding: 8, marginBottom: 8, borderRadius: 4, border: '1px solid #ddd' }}
-              />
-              <div style={{ textAlign: 'center', color: '#6c757d', fontSize: 14, marginTop: 4 }}>
-                OR
-              </div>
-              <input
-                type="url"
-                placeholder="Enter image URL"
-                value={avatarUrl}
-                onChange={(e) => handleAvatarUrlChange(e.target.value)}
-                style={{ width: '100%', padding: 8, marginTop: 8, borderRadius: 4, border: '1px solid #ddd' }}
+                style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ddd' }}
               />
             </div>
             <button

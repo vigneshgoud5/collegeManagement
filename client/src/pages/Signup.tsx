@@ -43,10 +43,6 @@ export function Signup() {
     }
   }
 
-  function handleAvatarUrlChange(url: string) {
-    setFormData({ ...formData, avatarUrl: url });
-    setAvatarPreview(url);
-  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -98,7 +94,36 @@ export function Signup() {
       const to = user.role === 'academic' ? '/dashboard/academic' : '/dashboard/student';
       navigate(to, { replace: true });
     } catch (err: any) {
-      setError(err?.response?.data?.message || 'Registration failed');
+      let errorMessage = 'Registration failed';
+      
+      if (err?.response?.data) {
+        // Handle validation errors with details
+        if (err.response.data.details && Array.isArray(err.response.data.details) && err.response.data.details.length > 0) {
+          // Format validation errors: "Field: Message" for each error
+          const errorMessages = err.response.data.details.map((detail: any) => {
+            const field = detail.field || detail.param || 'Field';
+            const message = detail.message || detail.msg || 'Invalid value';
+            // Capitalize first letter and format field name (e.g., "firstName" -> "First Name")
+            const formattedField = field
+              .charAt(0)
+              .toUpperCase() + 
+              field.slice(1)
+                .replace(/([A-Z])/g, ' $1')
+                .replace(/Id/g, 'ID')
+                .replace(/Url/g, 'URL')
+                .replace(/Dob/g, 'Date of Birth');
+            return `• ${formattedField}: ${message}`;
+          });
+          errorMessage = 'Please fix the following errors:\n' + errorMessages.join('\n');
+        } else if (err.response.data.message) {
+          errorMessage = err.response.data.message;
+        }
+      } else if (err?.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
+      console.error('Registration error:', err);
     } finally {
       setLoading(false);
     }
@@ -193,17 +218,7 @@ export function Signup() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    style={{ width: '100%', padding: 8, marginBottom: 8 }}
-                  />
-                  <div style={{ textAlign: 'center', color: '#6c757d', fontSize: 14, marginTop: 4 }}>
-                    OR
-                  </div>
-                  <input
-                    type="url"
-                    placeholder="Enter image URL"
-                    value={formData.avatarUrl}
-                    onChange={(e) => handleAvatarUrlChange(e.target.value)}
-                    style={{ width: '100%', padding: 8, marginTop: 8 }}
+                    style={{ width: '100%', padding: 8 }}
                   />
                 </div>
               </label>
@@ -353,17 +368,7 @@ export function Signup() {
                     type="file"
                     accept="image/*"
                     onChange={handleImageUpload}
-                    style={{ width: '100%', padding: 8, marginBottom: 8 }}
-                  />
-                  <div style={{ textAlign: 'center', color: '#6c757d', fontSize: 14, marginTop: 4 }}>
-                    OR
-                  </div>
-                  <input
-                    type="url"
-                    placeholder="Enter image URL"
-                    value={formData.avatarUrl}
-                    onChange={(e) => handleAvatarUrlChange(e.target.value)}
-                    style={{ width: '100%', padding: 8, marginTop: 8 }}
+                    style={{ width: '100%', padding: 8 }}
                   />
                 </div>
               </label>
@@ -372,8 +377,23 @@ export function Signup() {
         )}
 
         {error && (
-          <div className="alert alert-danger" role="alert" style={{ marginTop: '1rem' }}>
-            {error}
+          <div 
+            className="alert alert-danger" 
+            role="alert" 
+            style={{ 
+              marginTop: '1rem',
+              padding: '12px 16px',
+              backgroundColor: '#fee',
+              border: '1px solid #fcc',
+              borderRadius: '4px',
+              color: '#c33',
+              whiteSpace: 'pre-line', // Allow line breaks
+              fontSize: '14px',
+              lineHeight: '1.5',
+            }}
+          >
+            <strong>Registration Failed:</strong>
+            <div style={{ marginTop: '8px' }}>{error}</div>
           </div>
         )}
 

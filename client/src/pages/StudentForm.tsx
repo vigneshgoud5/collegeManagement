@@ -13,6 +13,7 @@ export function StudentForm() {
 	
 	const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 	const [avatarUrl, setAvatarUrl] = useState<string>('');
+	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
 		if (data?.avatarUrl) {
@@ -29,6 +30,21 @@ export function StudentForm() {
 		onSuccess: () => {
 			qc.invalidateQueries({ queryKey: ['admin-students'] });
 			navigate('/academic/students');
+		},
+		onError: (err: any) => {
+			let errorMessage = 'Failed to save student';
+			if (err?.response?.data) {
+				// Handle validation errors
+				if (err.response.data.details && Array.isArray(err.response.data.details)) {
+					errorMessage = err.response.data.details.map((d: any) => d.message).join(', ');
+				} else if (err.response.data.message) {
+					errorMessage = err.response.data.message;
+				}
+			} else if (err?.message) {
+				errorMessage = err.message;
+			}
+			setError(errorMessage);
+			console.error('Student save error:', err);
 		},
 	});
 
@@ -49,22 +65,49 @@ export function StudentForm() {
 		}
 	}
 
-	function handleAvatarUrlChange(url: string) {
-		setAvatarPreview(url);
-		setAvatarUrl(url);
-	}
 
 	function onSubmit(e: React.FormEvent) {
 		e.preventDefault();
+		setError(null);
 		const form = e.target as HTMLFormElement;
 		const fd = new FormData(form);
 		const payload: any = Object.fromEntries(fd.entries());
+		
 		if (!isEdit) {
 			// For create we need email/password
-			if (!payload.email || !payload.password) return;
+			if (!payload.email || !payload.password) {
+				setError('Email and password are required');
+				return;
+			}
+			if (!payload.firstName || !payload.lastName) {
+				setError('First name and last name are required');
+				return;
+			}
 		}
-		if (payload.year) payload.year = Number(payload.year);
-		payload.avatarUrl = avatarUrl || undefined;
+		
+		// Clean up payload: remove empty strings and convert to proper types
+		if (payload.year && payload.year !== '') {
+			const yearNum = Number(payload.year);
+			payload.year = isNaN(yearNum) ? undefined : yearNum;
+		} else {
+			delete payload.year;
+		}
+		
+		if (payload.department === '' || !payload.department) {
+			delete payload.department;
+		}
+		
+		if (avatarUrl && avatarUrl.trim() !== '') {
+			payload.avatarUrl = avatarUrl;
+		} else {
+			delete payload.avatarUrl;
+		}
+		
+		// Remove dob if empty
+		if (!payload.dob || payload.dob === '') {
+			delete payload.dob;
+		}
+		
 		mutation.mutate(payload);
 	}
 
@@ -80,6 +123,18 @@ export function StudentForm() {
 					boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
 					marginTop: 24,
 				}}>
+					{error && (
+						<div style={{
+							backgroundColor: '#fee',
+							border: '1px solid #fcc',
+							borderRadius: 4,
+							padding: 12,
+							marginBottom: 16,
+							color: '#c33',
+						}}>
+							{error}
+						</div>
+					)}
 					<form onSubmit={onSubmit}>
 						{!isEdit && (
 							<>
@@ -130,17 +185,7 @@ export function StudentForm() {
 								type="file"
 								accept="image/*"
 								onChange={handleImageUpload}
-								style={{ width: '100%', padding: 8, marginBottom: 8, borderRadius: 4, border: '1px solid #ddd' }}
-							/>
-							<div style={{ textAlign: 'center', color: '#6c757d', fontSize: 14, marginTop: 4 }}>
-								OR
-							</div>
-							<input
-								type="url"
-								placeholder="Enter image URL"
-								value={avatarUrl}
-								onChange={(e) => handleAvatarUrlChange(e.target.value)}
-								style={{ width: '100%', padding: 8, marginTop: 8, borderRadius: 4, border: '1px solid #ddd' }}
+								style={{ width: '100%', padding: 8, borderRadius: 4, border: '1px solid #ddd' }}
 							/>
 						</div>
 						<button 

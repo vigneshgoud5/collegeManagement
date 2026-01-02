@@ -50,7 +50,7 @@ export function StudentDetail() {
 		<div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
 			<AcademicNav />
 			<div style={{ padding: 24, maxWidth: 800, margin: '0 auto' }}>
-				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+				<div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24,backgroundColor: 'rgb(171, 227, 231)' }}>
 					<h1 style={{ margin: 0 }}>{profile.firstName} {profile.lastName}</h1>
 					{isAdministrator && (
 						<div style={{ display: 'flex', gap: 8 }}>

@@ -12,10 +12,10 @@ export function DashboardStudent() {
   });
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: 'lightblue' }}>
       <StudentNav />
-      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto' }}>
-        <h1>Student Dashboard</h1>
+      <div style={{ padding: 24, maxWidth: 1200, margin: '0 auto'}}>
+        <h1 style={{padding: '10px 20px',backgroundColor: 'lightgreen'}}>Student Dashboard</h1>
         
         {isLoading ? (
           <p>Loading...</p>

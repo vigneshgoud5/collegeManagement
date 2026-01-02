@@ -8,6 +8,7 @@
 		"build": "vite build",
 		"preview": "vite preview",
 		"test": "vitest",
+		"start": "npm run dev",
 		"test:run": "vitest run",
 		"test:serial": "vitest run"
 	},
