@@ -26,4 +26,5 @@ module.exports = {
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
   moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  testTimeout: 30000, // 30 seconds for tests that need MongoDB
 };

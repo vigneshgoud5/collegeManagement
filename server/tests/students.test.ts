@@ -18,7 +18,7 @@ describe('Students flows', () => {
   beforeEach(async () => {
     await User.deleteMany({});
     await StudentProfile.deleteMany({});
-  });
+  }, 30000); // Increase timeout to 30 seconds
 
   it('student can get and update own profile', async () => {
     const passwordHash = await hashPassword('pw');

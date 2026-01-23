@@ -65,7 +65,7 @@ const studentProfileSchema = new Schema<IStudentProfile>(
   }
 );
 
-export const StudentProfile: Model<IStudentProfile> = mongoose.model<IStudentProfile>(
+export const StudentProfile: Model<IStudentProfile> = mongoose.models.StudentProfile || mongoose.model<IStudentProfile>(
   'StudentProfile',
   studentProfileSchema
 );
