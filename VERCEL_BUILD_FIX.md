@@ -6,11 +6,9 @@ Your build is completing in 92ms with "no files were prepared" - this means Verc
 
 ## Root Cause
 
-Vercel is building from the repository root, but your React app is in the `client/` subdirectory. Vercel doesn't know where to find your project.
+Vercel is building from the repository root, but the build configuration might not be set correctly. The project structure has been flattened - all client files are now in the root directory.
 
-## Solution: Set Root Directory in Vercel Dashboard
-
-**This is the REQUIRED step - the vercel.json alone won't fix the build issue.**
+## Solution: Verify Vercel Project Settings
 
 ### Steps:
 
@@ -22,11 +20,9 @@ Vercel is building from the repository root, but your React app is in the `clien
    - Click "Settings" tab
    - Click "General" in the left sidebar
 
-3. **Configure Root Directory**
-   - Scroll to "Root Directory"
-   - Click "Edit"
-   - Enter: `client`
-   - Click "Save"
+3. **Verify Root Directory**
+   - **Root Directory**: Should be empty or set to `/` (root)
+   - Vercel should build from the repository root
 
 4. **Verify Build Settings** (should auto-detect, but verify)
    - **Framework Preset**: Should show "Vite" (or "Other")
@@ -47,12 +43,12 @@ Vercel is building from the repository root, but your React app is in the `clien
 
 ## What Happens After This
 
-Once root directory is set to `client`:
-- Vercel will look for `package.json` in `client/` directory ✅
-- Vercel will run `npm install` in `client/` directory ✅
-- Vercel will run `npm run build` in `client/` directory ✅
-- Vercel will find `client/vercel.json` for routing configuration ✅
-- Build output will be in `client/dist/` ✅
+With correct configuration:
+- Vercel will look for `package.json` in root directory ✅
+- Vercel will run `npm install` in root directory ✅
+- Vercel will run `npm run build` in root directory ✅
+- Vercel will find `vercel.json` for routing configuration ✅
+- Build output will be in `dist/` ✅
 
 ## Verification
 
@@ -62,45 +58,26 @@ After redeploying, check the build logs. You should see:
 - ✅ Files being prepared and uploaded
 - ✅ Build time should be 2-5 minutes, not 92ms
 
-## Alternative: If You Can't Set Root Directory
-
-If for some reason you can't set the root directory in the dashboard, you have two options:
-
-### Option 1: Use Vercel CLI with Root Directory
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Deploy with root directory
-cd /path/to/your/repo
-vercel --cwd client
-```
-
-### Option 2: Create a Separate Vercel Project
-
-1. Create a new Vercel project
-2. Connect only the `client/` directory (if using GitHub, you might need a separate repo or use a monorepo setup)
-3. Or use Vercel's monorepo support with proper configuration
-
 ## Why This Happened
 
-- **Monorepo structure**: Your repo has both `client/` and `server/` directories
+- **Project structure**: All client files are now in the root directory
 - **Vercel default**: Vercel builds from the repository root by default
-- **Missing configuration**: Without root directory set, Vercel looks for `package.json` in root (which exists but is just for running both services locally)
-- **Result**: Vercel finds the root `package.json`, but it doesn't have a build script, so it skips the build
+- **Missing configuration**: Vercel might not auto-detect Vite framework
+- **Result**: Vercel might skip the build if framework isn't detected
 
-## Files Created
+## Files Structure
 
-- `vercel.json` (root) - Routing configuration (backup, but `client/vercel.json` will be used)
-- `client/vercel.json` - Main routing configuration (used when root directory is `client`)
+- `vercel.json` (root) - Routing configuration
+- `package.json` (root) - Contains build scripts
+- `vite.config.ts` (root) - Vite configuration
 - `VERCEL_BUILD_FIX.md` - This guide
 
 ## Next Steps After Fix
 
-1. ✅ Set root directory to `client` in Vercel dashboard
-2. ✅ Add `VITE_API_BASE_URL` environment variable
-3. ✅ Redeploy
-4. ✅ Test that build actually runs (check logs)
-5. ✅ Test that routes work (direct URL access, refresh)
-6. ✅ Test that API calls work (check network tab in browser)
+1. ✅ Verify root directory is empty or `/` in Vercel dashboard
+2. ✅ Verify framework preset is "Vite" or "Other"
+3. ✅ Add `VITE_API_BASE_URL` environment variable
+4. ✅ Redeploy
+5. ✅ Test that build actually runs (check logs)
+6. ✅ Test that routes work (direct URL access, refresh)
+7. ✅ Test that API calls work (check network tab in browser)

@@ -81,7 +81,6 @@ A full-stack web application for managing college students and academic staff, b
    npm run dev
    
    # Terminal 2 - Frontend
-   cd client
    npm install
    npm run dev
    ```
@@ -110,15 +109,14 @@ docker-compose -f docker-compose.prod.yml up -d --build
 
 ```
 gnit/
-├── client/                 # React frontend
-│   ├── src/
-│   │   ├── api/           # API client functions
-│   │   ├── components/    # React components
-│   │   ├── pages/         # Page components
-│   │   ├── store/         # Zustand state management
-│   │   └── styles/        # CSS styles
-│   └── Dockerfile
-├── server/                 # Express backend
+├── src/                    # React frontend source
+│   ├── api/               # API client functions
+│   ├── components/        # React components
+│   ├── pages/             # Page components
+│   ├── store/             # Zustand state management
+│   └── styles/            # CSS styles
+├── public/                # Static assets
+├── server/                # Express backend
 │   ├── src/
 │   │   ├── config/        # Configuration files
 │   │   ├── controllers/   # Route controllers

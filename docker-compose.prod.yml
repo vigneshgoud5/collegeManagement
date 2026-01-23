@@ -46,8 +46,8 @@ services:
 
   client:
     build:
-      context: ./client
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: Dockerfile.client
       args:
         - VITE_API_BASE_URL=${VITE_API_BASE_URL}
     restart: unless-stopped

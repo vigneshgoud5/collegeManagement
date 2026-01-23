@@ -80,15 +80,8 @@ else
     echo -e "${YELLOW}⚠️  Server .env file already exists, skipping...${NC}"
 fi
 
-# Setup client .env
-if [ ! -f client/.env ]; then
-    echo -e "${GREEN}Creating client/.env file...${NC}"
-    cp client/.env.example client/.env
-    echo -e "${GREEN}✅ Client .env file created${NC}"
-    echo -e "${YELLOW}⚠️  Please review and update client/.env with your API URL${NC}"
-else
-    echo -e "${YELLOW}⚠️  Client .env file already exists, skipping...${NC}"
-fi
+# Frontend .env is now in root directory (VITE_API_BASE_URL is in root .env)
+# No separate client/.env file needed
 
 echo ""
 echo -e "${GREEN}✅ Environment setup complete!${NC}"

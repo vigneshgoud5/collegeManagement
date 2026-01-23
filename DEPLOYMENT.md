@@ -150,8 +150,8 @@ sudo systemctl restart nginx
 #### Frontend: Vercel/Netlify
 
 1. Connect your GitHub repository
-2. Set build command: `cd client && npm run build`
-3. Set output directory: `client/dist`
+2. Set build command: `npm run build`
+3. Set output directory: `dist`
 4. Add environment variable: `VITE_API_BASE_URL=https://your-api-domain.com/api`
 
 #### Backend: Railway/Render/Heroku

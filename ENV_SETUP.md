@@ -38,13 +38,13 @@ Used for local server development. Contains:
 
 **Template:** `server/.env.example`
 
-### Client `.env`
-Location: `/home/common/Documents/gnit/client/.env`
+### Frontend `.env` (Root)
+Location: `/home/common/Documents/gnit/.env`
 
-Used for local client development. Contains:
+Used for local frontend development. Contains:
 - `VITE_API_BASE_URL` - Backend API URL (must end with `/api`)
 
-**Template:** `client/.env.example`
+**Template:** `.env.example` (in root directory)
 
 ## Required Environment Variables
 
@@ -74,7 +74,7 @@ Used for local client development. Contains:
 | `JWT_REFRESH_SECRET` | JWT refresh secret | Yes | - |
 | `CLIENT_ORIGIN` | Frontend URL for CORS | Yes | `http://localhost:5173` |
 
-### For Client Development (`client/.env`)
+### For Frontend Development (Root `.env`)
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|

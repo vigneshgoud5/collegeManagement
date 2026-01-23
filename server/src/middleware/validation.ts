@@ -160,13 +160,16 @@ const avatarUrlValidation = body('avatarUrl')
   .custom((value) => {
     if (!value || value === '') return true;
     // Allow data URIs (base64 images) and regular URLs
+    // Base64 encoding increases size by ~33%, so 5MB image ≈ 6.7MB base64
+    // Set limit to 10MB base64 (supports up to ~7.5MB original image)
+    const MAX_AVATAR_SIZE = 10 * 1024 * 1024; // 10MB in characters
     if (value.startsWith('data:image/')) {
-      if (value.length > 2048) {
-        throw new Error('Avatar URL must be less than 2048 characters');
+      if (value.length > MAX_AVATAR_SIZE) {
+        throw new Error(`Avatar image is too large. Maximum size is approximately 7.5MB (${(MAX_AVATAR_SIZE / 1024 / 1024).toFixed(1)}MB base64 encoded)`);
       }
       return true;
     }
-    // Validate as URL for non-data URIs
+    // Validate as URL for non-data URIs (regular URLs can be longer)
     try {
       new URL(value);
       if (value.length > 2048) {
