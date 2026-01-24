@@ -18,7 +18,7 @@ export default defineConfig({
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    setupFiles: [path.resolve(process.cwd(), 'src/test/setup.ts')],
     exclude: ['**/node_modules/**', '**/client/**', '**/server/**'], // Exclude client and server directories
     pool: 'forks',
     poolOptions: {
