@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "buildCommand": "cd client && npm install && npm run build",
+  "buildCommand": "npm run build:vercel",
   "outputDirectory": "client/dist",
-  "installCommand": "npm install",
+  "installCommand": "npm install && cd server && npm install && cd ..",
   "framework": "vite",
   "rewrites": [
     {

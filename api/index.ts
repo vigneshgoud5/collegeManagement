@@ -1,5 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { app, initializeApp } from '../server/src/app.js';
+// Import from built server code (dist folder)
+// Note: Server must be built before deployment (handled by build:vercel script)
+import { app, initializeApp } from '../server/dist/app.js';
 
 // Initialize MongoDB connection (cached across invocations in serverless)
 let isInitialized = false;
