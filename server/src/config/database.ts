@@ -1,15 +1,28 @@
 import mongoose from 'mongoose';
 import { env } from './env.js';
 
+// Cache connection for serverless environments (Vercel, etc.)
+let cachedConnection: typeof mongoose | null = null;
+
 export const connectDB = async () => {
   try {
-    // Connection options for better reliability
+    // Reuse existing connection in serverless environments
+    if (cachedConnection && mongoose.connection.readyState === 1) {
+      return cachedConnection;
+    }
+
+    // Connection options optimized for serverless
     const options = {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
+      maxPoolSize: 10, // Maintain up to 10 socket connections
+      minPoolSize: 1, // Maintain at least 1 socket connection
+      bufferCommands: false, // Disable mongoose buffering
+      bufferMaxEntries: 0, // Disable mongoose buffering
     };
 
-    await mongoose.connect(env.MONGO_URI, options);
+    const connection = await mongoose.connect(env.MONGO_URI, options);
+    cachedConnection = connection;
     
     // Connection event listeners
     mongoose.connection.on('connected', () => {

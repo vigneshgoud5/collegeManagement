@@ -16,11 +16,14 @@ export function StudentForm() {
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		if (data?.avatarUrl) {
-			setAvatarPreview((data as any).avatarUrl);
-			setAvatarUrl((data as any).avatarUrl);
+		// Use (data as any) for now, as data's type AdminStudent may not have avatarUrl.
+		const avatar = (data as any)?.avatarUrl;
+		if (avatar) {
+			setAvatarPreview(avatar);
+			setAvatarUrl(avatar);
 		}
 	}, [data]);
+
 
 	const mutation = useMutation({
 		mutationFn: async (payload: any) => {

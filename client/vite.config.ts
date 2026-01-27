@@ -8,6 +8,7 @@ const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
+  base: '/', // Vercel uses root path
   server: {
     port: 5173,
   },
