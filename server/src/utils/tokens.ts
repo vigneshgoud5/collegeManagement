@@ -23,7 +23,7 @@ export function signRefreshToken(userId: string, role: 'academic' | 'student'): 
 
 export function verifyAccessToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, env.JWT_ACCESS_SECRET) as JwtPayload;
+    return jwt.verify(token, env.JWT_ACCESS_SECRET, {}) as JwtPayload;
   } catch {
     return null;
   }
@@ -31,7 +31,7 @@ export function verifyAccessToken(token: string): JwtPayload | null {
 
 export function verifyRefreshToken(token: string): JwtPayload | null {
   try {
-    return jwt.verify(token, env.JWT_REFRESH_SECRET) as JwtPayload;
+    return jwt.verify(token, env.JWT_REFRESH_SECRET, {}) as JwtPayload;
   } catch {
     return null;
   }

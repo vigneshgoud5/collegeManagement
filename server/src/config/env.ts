@@ -22,5 +22,6 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const env = parsed.data;
+// Type assertion: parsed.data is guaranteed to be defined after success check
+export const env = parsed.data as z.infer<typeof envSchema>;
 
