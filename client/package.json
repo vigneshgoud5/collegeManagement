@@ -9,7 +9,8 @@
 		"preview": "vite preview",
 		"test": "vitest",
 		"start": "npm run dev",
-		"test:run": "vitest run",
+		"test:run": "node scripts/vitest-basic.js run",
+		"test:basic": "node scripts/vitest-basic.js run --reporter=basic",
 		"test:serial": "vitest run"
 	},
 	"dependencies": {

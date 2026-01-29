@@ -1,10 +1,9 @@
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { vi, describe, it, expect } from 'vitest';
-// Import from root src since files were moved from client to root
-import { Login } from '../../../src/pages/Login';
+import { Login } from '../pages/Login';
 
-vi.mock('../../../src/store/auth', () => ({
+vi.mock('../store/auth', () => ({
   useAuthStore: () => ({ login: vi.fn() }),
 }));
 
