@@ -12,6 +12,8 @@ const envSchema = z.object({
   JWT_ACCESS_SECRET: z.string().min(1, 'JWT_ACCESS_SECRET is required'),
   JWT_REFRESH_SECRET: z.string().min(1, 'JWT_REFRESH_SECRET is required'),
   CLIENT_ORIGIN: z.string().default('http://localhost:5173'),
+  // Optional: comma-separated list of allowed origins for preview deployments
+  CLIENT_ORIGINS: z.string().optional(),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
 });
 

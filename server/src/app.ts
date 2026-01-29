@@ -34,9 +34,41 @@ app.use(validateRequestSize);
 app.use(apiRateLimiter);
 app.use(sanitizeInput);
 
-// CORS configuration
+// CORS configuration - support multiple origins for Vercel preview deployments
+const getAllowedOrigins = (): string[] | ((origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => void) => {
+  const origins: string[] = [env.CLIENT_ORIGIN];
+  
+  // Add additional origins from CLIENT_ORIGINS if provided (comma-separated)
+  if (env.CLIENT_ORIGINS) {
+    const additionalOrigins = env.CLIENT_ORIGINS.split(',').map(origin => origin.trim()).filter(Boolean);
+    origins.push(...additionalOrigins);
+  }
+  
+  // In production, use a function to dynamically allow Vercel preview URLs
+  if (env.NODE_ENV === 'production') {
+    return (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
+      if (!origin) return callback(null, false);
+      
+      // Allow exact matches
+      if (origins.includes(origin)) {
+        return callback(null, true);
+      }
+      
+      // Allow Vercel preview URLs (pattern matching)
+      const vercelPreviewPattern = /^https:\/\/.*\.vercel\.app$/;
+      if (vercelPreviewPattern.test(origin)) {
+        return callback(null, true);
+      }
+      
+      callback(null, false);
+    };
+  }
+  
+  return origins;
+};
+
 app.use(cors({
-  origin: env.CLIENT_ORIGIN,
+  origin: getAllowedOrigins(),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
