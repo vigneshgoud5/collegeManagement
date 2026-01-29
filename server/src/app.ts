@@ -35,7 +35,13 @@ app.use(apiRateLimiter);
 app.use(sanitizeInput);
 
 // CORS configuration
-app.use(cors({ origin: env.CLIENT_ORIGIN, credentials: true }));
+app.use(cors({
+  origin: env.CLIENT_ORIGIN,
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  exposedHeaders: ['Content-Type'],
+}));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' })); // Increase limit for base64 image uploads
