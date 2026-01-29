@@ -9,6 +9,7 @@
 
 ### 1. Fixed TypeScript Compiler
 
+
 **Problem**: The server build script used `tsc` directly, which wasn't in PATH.
 
 **Solution**: Changed server build script to use `npx tsc`:

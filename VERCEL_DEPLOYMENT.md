@@ -1,92 +1,159 @@
 # Vercel Deployment Guide
 
-## Quick Fix for NOT_FOUND Error
+This guide explains how to deploy the College Portal application to Vercel with proper structure and dependencies.
 
-If you're seeing `NOT_FOUND` errors on Vercel, this guide explains the issue and how to fix it.
-
-## The Problem
-
-When deploying a React Single Page Application (SPA) to Vercel, you may encounter `NOT_FOUND` errors when:
-- Navigating directly to routes like `/student/settings`
-- Refreshing the page on any route other than `/`
-- Sharing deep links with others
-
-## The Solution
-
-A `vercel.json` file has been created in the root directory to handle SPA routing.
-
-### Vercel Project Settings
-
-1. In Vercel Dashboard → Project Settings → General:
-   - **Root Directory**: Leave empty (or set to `/`)
-   - **Build Command**: `npm run build` (or leave empty to use package.json)
-   - **Output Directory**: `dist`
-   - **Framework Preset**: `Vite` (or `Other` if Vite isn't available)
-
-2. The root-level `vercel.json` file will be used automatically.
-
-### Environment Variables
-
-In your Vercel project settings, add:
+## Project Structure
 
 ```
-VITE_API_BASE_URL=https://your-backend-api.com/api
+gnit/
+├── api/                    # Vercel serverless functions
+│   └── index.ts           # Express app wrapper for Vercel
+├── client/                 # React frontend
+│   ├── src/               # Source code
+│   ├── dist/              # Build output (generated)
+│   ├── package.json       # Client dependencies
+│   └── vite.config.ts     # Vite configuration
+├── server/                 # Express backend
+│   ├── src/               # Source code
+│   ├── dist/              # Build output (generated)
+│   └── package.json       # Server dependencies (for local dev)
+├── package.json           # Root dependencies (includes server deps for Vercel)
+├── vercel.json            # Vercel configuration
+└── .vercelignore          # Files to exclude from deployment
 ```
 
-Replace `https://your-backend-api.com/api` with your actual backend API URL.
+## Key Configuration Files
 
-## How It Works
+### `vercel.json`
+- **buildCommand**: `npm run build:vercel` - Builds both server and client
+- **outputDirectory**: `client/dist` - Frontend build output
+- **installCommand**: Installs dependencies in root, server, and client
+- **rewrites**: Routes `/api/*` to serverless function, everything else to `index.html`
 
-The `vercel.json` file tells Vercel:
-- **Rewrites**: All requests that don't match static files should be served `index.html`
-- This allows React Router to handle routing on the client side
-- **Headers**: Cache static assets (JS, CSS, images) for better performance
+### `package.json` (root)
+- Contains all server dependencies (needed for Vercel serverless functions)
+- Contains build tools and dev dependencies
+- **build:vercel** script: Builds server with `npx tsc`, then client with `npx vite build`
 
-## Testing Locally
+## Deployment Steps
 
-Before deploying, test your production build locally:
+### 1. Prerequisites
+- Vercel account
+- MongoDB Atlas account (or your MongoDB instance)
+- Git repository
 
+### 2. Environment Variables
+
+Set these in Vercel Dashboard → Settings → Environment Variables:
+
+**Server Environment Variables:**
+```
+MONGO_URI=mongodb+srv://username:password@cluster.mongodb.net/dbname
+JWT_ACCESS_SECRET=your_access_secret_here
+JWT_REFRESH_SECRET=your_refresh_secret_here
+CLIENT_ORIGIN=https://your-project.vercel.app
+NODE_ENV=production
+PORT=3000
+```
+
+**Client Environment Variables:**
+```
+VITE_API_BASE_URL=https://your-project.vercel.app/api
+```
+
+### 3. Deploy to Vercel
+
+#### Option A: Via Vercel CLI
 ```bash
-npm run build
-npm run preview
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy
+vercel --prod
 ```
 
-Visit `http://localhost:4173` (or the port shown) and test:
-- Direct navigation to routes
-- Page refreshes
-- Deep links
+#### Option B: Via GitHub Integration
+1. Push your code to GitHub
+2. Go to [Vercel Dashboard](https://vercel.com/dashboard)
+3. Click "Add New Project"
+4. Import your GitHub repository
+5. Configure:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `./` (root)
+   - **Build Command**: `npm run build:vercel`
+   - **Output Directory**: `client/dist`
+   - **Install Command**: `npm install && cd server && npm install && cd ../client && npm install && cd ..`
+6. Add environment variables
+7. Deploy
 
-## Deployment Checklist
+### 4. Post-Deployment
 
-**Choose one approach:**
+1. **Update CLIENT_ORIGIN**: After first deployment, update `CLIENT_ORIGIN` in Vercel to match your actual domain
+2. **Update VITE_API_BASE_URL**: Update client env var to `https://your-project.vercel.app/api`
+3. **Redeploy**: Trigger a new deployment after updating environment variables
 
-- [ ] `vercel.json` exists at repository root
-- [ ] Root directory is empty or set to `/` in dashboard
-- [ ] Build command is `npm run build` (or auto-detected)
-- [ ] Output directory is `dist` (or auto-detected)
-- [ ] `VITE_API_BASE_URL` environment variable is set
-- [ ] Backend API is accessible from Vercel's servers
-- [ ] CORS is configured on backend to allow Vercel domain
+## Build Process
+
+The `build:vercel` script:
+1. Compiles TypeScript server code (`server/src` → `server/dist`)
+2. Builds React client (`client/src` → `client/dist`)
+3. Vercel uses `client/dist` as the static frontend
+4. Vercel uses `api/index.ts` as the serverless function entry point
+
+## Directory Structure Notes
+
+- **Root `src/` and `dist/`**: Removed (duplicates, not needed)
+- **Root `index.html`, `vite.config.ts`, `tsconfig.json`**: Removed (use client versions)
+- **`client/vercel.json`**: Removed (use root `vercel.json`)
+- **`.vercelignore`**: Excludes unnecessary files from deployment
 
 ## Troubleshooting
 
-### Still seeing NOT_FOUND?
+### Build Fails: "Cannot find module"
+- Ensure all dependencies are in root `package.json` (for serverless functions)
+- Run `npm install` in root, server, and client directories
 
-1. **Check file location**: `vercel.json` must be in the root directory
-2. **Verify build output**: Run `npm run build` and ensure `dist/` contains `index.html`
-3. **Check Vercel logs**: Look at build logs in Vercel dashboard for errors
-4. **Test build locally**: Use `npm run preview` to catch issues before deploying
+### Build Fails: "tsc: command not found"
+- The build script uses `npx tsc` to use local TypeScript
+- Ensure `typescript` is in root `devDependencies`
 
-### API calls failing?
+### Build Fails: "vite: command not found"
+- The build script uses `npx vite build` to use local Vite
+- Ensure `vite` is in root `devDependencies`
 
-1. **Check environment variable**: Ensure `VITE_API_BASE_URL` is set in Vercel
-2. **Verify CORS**: Backend must allow requests from your Vercel domain
-3. **Check network tab**: Browser DevTools will show the actual API URL being used
+### CORS Errors
+- Verify `CLIENT_ORIGIN` matches your Vercel domain
+- Check that CORS middleware is configured in `server/src/app.ts`
 
-## Architecture Notes
+### Database Connection Fails
+- Verify `MONGO_URI` is correct in Vercel environment variables
+- Check MongoDB Atlas IP whitelist (allow all IPs: `0.0.0.0/0` for testing)
 
-This project uses a **separated frontend/backend architecture**:
-- **Frontend (Vercel)**: React SPA, static files served via CDN
-- **Backend (Separate)**: Express.js API, deployed elsewhere (Railway, Render, Heroku, etc.)
+## Local Development
 
-The frontend makes API calls to the backend using the `VITE_API_BASE_URL` environment variable.
+For local development:
+```bash
+# Install all dependencies
+npm install
+cd server && npm install && cd ..
+cd client && npm install && cd ..
+
+# Run development servers
+npm run dev
+```
+
+## Production Checklist
+
+- [ ] All environment variables set in Vercel
+- [ ] `CLIENT_ORIGIN` matches Vercel domain
+- [ ] `VITE_API_BASE_URL` matches Vercel domain + `/api`
+- [ ] MongoDB connection string is correct
+- [ ] JWT secrets are strong and secure
+- [ ] Build completes successfully
+- [ ] API endpoints are accessible
+- [ ] Frontend loads correctly
+- [ ] Authentication works
+- [ ] CORS is configured correctly
