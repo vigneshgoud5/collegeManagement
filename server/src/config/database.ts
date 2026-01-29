@@ -11,13 +11,17 @@ export const connectDB = async () => {
       return cachedConnection;
     }
 
-    // Connection options optimized for serverless
+    // Connection options optimized for serverless (Vercel)
     // Note: bufferCommands and bufferMaxEntries are deprecated in newer Mongoose versions
     const options = {
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 10000, // 10s timeout for serverless (Vercel free tier limit)
       socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
-      maxPoolSize: 10, // Maintain up to 10 socket connections
-      minPoolSize: 1, // Maintain at least 1 socket connection
+      connectTimeoutMS: 10000, // 10s connection timeout
+      maxPoolSize: 1, // Single connection for serverless (reduces overhead)
+      minPoolSize: 0, // No minimum for serverless (connections are ephemeral)
+      heartbeatFrequencyMS: 10000, // Check connection health every 10s
+      retryWrites: true,
+      retryReads: true,
     };
 
     const connection = await mongoose.connect(env.MONGO_URI, options);

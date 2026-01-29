@@ -4,6 +4,11 @@
   "outputDirectory": "client/dist",
   "installCommand": "npm install --include=dev && cd server && npm install --include=dev && cd ../client && npm install --include=dev && cd ..",
   "framework": "vite",
+  "functions": {
+    "api/index.ts": {
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
