@@ -61,7 +61,7 @@ jobs:
       - name: Install deps
         run: npm ci --no-audit --no-fund
       - name: Test (vitest)
-        run: npm run test:run -- --reporter=basic
+        run: npm run test:run -- --reporter=default
         # Tests run from root directory where src/ and vite.config.ts are located
 
 
