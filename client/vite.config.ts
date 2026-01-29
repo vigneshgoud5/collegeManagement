@@ -25,6 +25,9 @@ export default defineConfig({
     globals: true,
     environment: 'jsdom',
     setupFiles: [path.resolve(__dirname, 'src/test/setup.ts')],
+    reporter: ['default'], // Valid reporters: 'default', 'verbose', 'dot', 'json', 'junit'
+    pool: 'forks',
+    // Note: poolOptions was removed in Vitest 4, use top-level options instead
   },
 });
 
