@@ -128,14 +128,31 @@ export async function refresh(req: Request, res: Response) {
     return res.status(401).json({ message: 'Missing refresh token' });
   }
 
-  const result = await refreshService(token);
-  if (!result.ok) {
-    clearAuthCookies(res);
-    return res.status(401).json({ message: 'Invalid refresh token' });
-  }
+  try {
+    // Add timeout wrapper for refresh service (max 3 seconds)
+    const refreshPromise = refreshService(token);
+    const timeoutPromise = new Promise<{ ok: false; code: 'TIMEOUT' }>((resolve) => {
+      setTimeout(() => resolve({ ok: false as const, code: 'TIMEOUT' as const }), 3000);
+    });
 
-  setAuthCookies(res, result.accessToken, result.refreshToken);
-  return res.json({ user: result.user });
+    const result = await Promise.race([refreshPromise, timeoutPromise]);
+    
+    if (!result.ok) {
+      clearAuthCookies(res);
+      const status = result.code === 'TIMEOUT' ? 503 : 401;
+      const message = result.code === 'TIMEOUT' 
+        ? 'Service temporarily unavailable. Please try again.' 
+        : 'Invalid refresh token';
+      return res.status(status).json({ message, code: result.code });
+    }
+
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return res.json({ user: result.user });
+  } catch (error) {
+    console.error('Refresh error:', error);
+    clearAuthCookies(res);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
 }
 
 export async function logout(req: Request, res: Response) {

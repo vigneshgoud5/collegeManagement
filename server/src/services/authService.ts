@@ -53,17 +53,25 @@ export async function refreshService(token: string) {
     return { ok: false as const, code: 'INVALID_REFRESH' };
   }
 
-  const user = await User.findById(payload.sub);
+  // Use lean() for faster queries (no Mongoose document overhead)
+  // Only select needed fields for better performance
+  const user = await User.findById(payload.sub)
+    .select('email role subRole name avatarUrl department contact status')
+    .lean()
+    .exec();
+    
   if (!user || user.status !== 'active') {
     return { ok: false as const, code: 'INVALID_REFRESH' };
   }
 
-  const accessToken = signAccessToken(user.id, user.role);
-  const refreshToken = signRefreshToken(user.id, user.role);
+  // Convert _id to string (lean() returns ObjectId)
+  const userId = (user as any)._id?.toString() || payload.sub;
+  const accessToken = signAccessToken(userId, user.role);
+  const refreshToken = signRefreshToken(userId, user.role);
   return {
         ok: true as const,
     user: {
-          id: user.id, 
+          id: userId, 
       email: user.email,
       role: user.role,
           subRole: user.subRole,
