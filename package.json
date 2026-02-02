@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "concurrently -n server,client -c green,cyan \"npm run dev --prefix server\" \"npm run dev\"",
-    "dev:client": "vite",
+    "dev:client": "cd client && vite",
     "dev:server": "npm run dev --prefix server",
-    "build": "vite build",
+    "build": "cd client && npm run build",
     "build:vercel": "cd server && npm run build && cd ../client && npm run build",
     "preview": "vite preview",
     "test": "npm run test:client && npm run test:server",

@@ -18,6 +18,10 @@ import {
 
 export const app = express();
 
+// Trust proxy for Vercel serverless (required for rate limiting to work correctly)
+// This allows Express to properly handle X-Forwarded-For headers
+app.set('trust proxy', true);
+
 // Initialize MongoDB connection
 export const initializeApp = async () => {
   try {

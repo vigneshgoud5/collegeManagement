@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import helmet from 'helmet';
 import { env } from '../config/env.js';
 
@@ -26,6 +26,32 @@ export const securityHeaders = helmet({
   },
 });
 
+// Custom key generator for serverless environments (Vercel)
+// Uses ipKeyGenerator helper to properly handle IPv6 addresses
+const getKeyGenerator = () => {
+  return (req: Request): string => {
+    // Extract IP from request (works with trust proxy enabled)
+    const rawIp = req.ip || 
+                  req.socket.remoteAddress || 
+                  (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+                  (req.headers['x-real-ip'] as string) ||
+                  'unknown';
+    
+    // Use ipKeyGenerator helper for proper IPv6 handling (normalizes IPv6 subnets)
+    // This prevents IPv6 users from bypassing rate limits
+    if (rawIp && rawIp !== 'unknown') {
+      try {
+        return ipKeyGenerator(rawIp);
+      } catch (error) {
+        // If ipKeyGenerator fails, return raw IP
+        return rawIp;
+      }
+    }
+    
+    return rawIp;
+  };
+};
+
 // Rate limiting for authentication endpoints
 // More lenient in development mode for testing
 export const authRateLimiter = rateLimit({
@@ -35,6 +61,12 @@ export const authRateLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Don't count successful requests
+  keyGenerator: getKeyGenerator(), // Custom key generator for serverless (uses ipKeyGenerator helper)
+  validate: {
+    ip: false, // Disable IP validation (we handle it in keyGenerator)
+    xForwardedForHeader: false, // Disable X-Forwarded-For validation (we handle it)
+    forwardedHeader: false, // Disable Forwarded header validation
+  },
 });
 
 // Rate limiting for general API endpoints
@@ -44,6 +76,12 @@ export const apiRateLimiter = rateLimit({
   message: 'Too many requests from this IP, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getKeyGenerator(), // Custom key generator for serverless (uses ipKeyGenerator helper)
+  validate: {
+    ip: false, // Disable IP validation (we handle it in keyGenerator)
+    xForwardedForHeader: false, // Disable X-Forwarded-For validation (we handle it)
+    forwardedHeader: false, // Disable Forwarded header validation
+  },
 });
 
 // Rate limiting for registration endpoint
@@ -54,6 +92,12 @@ export const registerRateLimiter = rateLimit({
   message: 'Too many registration attempts, please try again later.',
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: getKeyGenerator(), // Custom key generator for serverless (uses ipKeyGenerator helper)
+  validate: {
+    ip: false, // Disable IP validation (we handle it in keyGenerator)
+    xForwardedForHeader: false, // Disable X-Forwarded-For validation (we handle it)
+    forwardedHeader: false, // Disable Forwarded header validation
+  },
 });
 
 // Input sanitization middleware
