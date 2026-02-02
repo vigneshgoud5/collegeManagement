@@ -9,14 +9,18 @@ import mongoose from 'mongoose';
 let isInitialized = false;
 let isInitializing = false;
 let serverlessHandler: ReturnType<typeof serverless> | null = null;
+let initPromise: Promise<void> | null = null;
 
 // Connection timeout for serverless (Vercel free tier: 10s, Pro: 60s)
-const INIT_TIMEOUT = 8000; // 8s to leave buffer for request processing
+const INIT_TIMEOUT = 5000; // 5s timeout - reduced for faster failure
+
+// Routes that don't require database connection
+const NO_DB_ROUTES = ['/api/health'];
 
 async function initializeWithTimeout(): Promise<void> {
   return new Promise(async (resolve, reject) => {
     const timeout = setTimeout(() => {
-      reject(new Error('Database initialization timeout'));
+      reject(new Error('Database initialization timeout after 5s'));
     }, INIT_TIMEOUT);
 
     try {
@@ -30,61 +34,85 @@ async function initializeWithTimeout(): Promise<void> {
   });
 }
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Initialize MongoDB connection on first invocation with timeout protection
-  if (!isInitialized && !isInitializing) {
-    isInitializing = true;
+async function ensureInitialized(): Promise<void> {
+  // If already initialized, return immediately
+  if (isInitialized && mongoose.connection.readyState === 1) {
+    return;
+  }
+
+  // If initialization is in progress, wait for it
+  if (isInitializing && initPromise) {
+    return initPromise;
+  }
+
+  // Start new initialization
+  isInitializing = true;
+  initPromise = (async () => {
     try {
       // Check if connection already exists (from previous invocation)
       if (mongoose.connection.readyState === 1) {
         console.log('✅ Reusing existing MongoDB connection');
         isInitialized = true;
         isInitializing = false;
-      } else {
-        console.log('🔄 Initializing MongoDB connection...');
-        await initializeWithTimeout();
-        isInitialized = true;
-        isInitializing = false;
-        console.log('✅ MongoDB connection initialized');
+        return;
       }
-      
-      // Create serverless handler after app is initialized
-      if (!serverlessHandler) {
-        serverlessHandler = serverless(app, {
-          binary: ['image/*', 'application/pdf'],
-        });
-      }
+
+      console.log('🔄 Initializing MongoDB connection...');
+      await initializeWithTimeout();
+      isInitialized = true;
+      isInitializing = false;
+      console.log('✅ MongoDB connection initialized');
     } catch (error) {
       isInitializing = false;
+      isInitialized = false;
       console.error('❌ Failed to initialize app:', error);
-      return res.status(503).json({ 
-        error: 'Service temporarily unavailable', 
-        message: 'Database connection failed',
-        details: error instanceof Error ? error.message : 'Unknown error',
-        retry: true
-      });
+      throw error;
     }
-  } else if (isInitializing) {
-    // Wait for initialization to complete
-    let attempts = 0;
-    while (isInitializing && attempts < 50) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-      attempts++;
-    }
-    if (!isInitialized) {
-      return res.status(503).json({ 
-        error: 'Service temporarily unavailable', 
-        message: 'Database initialization in progress',
-        retry: true
-      });
-    }
-  }
+  })();
 
-  // Use serverless-http to handle the request
+  return initPromise;
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Create serverless handler immediately (doesn't require DB)
   if (!serverlessHandler) {
-    return res.status(500).json({ error: 'Handler not initialized' });
+    serverlessHandler = serverless(app, {
+      binary: ['image/*', 'application/pdf'],
+    });
   }
 
+  // Check if this route requires database connection
+  const path = req.url || '';
+  const requiresDB = !NO_DB_ROUTES.some(route => path.startsWith(route));
+
+  // For routes that don't require DB, handle immediately
+  if (!requiresDB) {
+    try {
+      return await serverlessHandler(req, res);
+    } catch (error) {
+      console.error('❌ Serverless handler error:', error);
+      return res.status(500).json({ 
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  }
+
+  // For routes that require DB, ensure connection is initialized
+  try {
+    await ensureInitialized();
+  } catch (error) {
+    // If DB initialization fails, return error but don't block health checks
+    console.error('❌ Database connection failed:', error);
+    return res.status(503).json({ 
+      error: 'Service temporarily unavailable', 
+      message: 'Database connection failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+      retry: true
+    });
+  }
+
+  // Handle the request
   try {
     return await serverlessHandler(req, res);
   } catch (error) {

@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import mongoose from 'mongoose';
 import { env } from './config/env.js';
 import { errorHandler } from './utils/errors.js';
 import { connectDB } from './config/database.js';
@@ -31,6 +32,17 @@ export const initializeApp = async () => {
 // Security middleware (applied first)
 app.use(securityHeaders);
 app.use(validateRequestSize);
+
+// Health check endpoint - no rate limiting, responds immediately
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    timestamp: new Date().toISOString(),
+    db: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
+// Apply rate limiting to other routes
 app.use(apiRateLimiter);
 app.use(sanitizeInput);
 
@@ -79,10 +91,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' })); // Increase limit for base64 image uploads
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
-
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
 
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentSelfRoutes);
