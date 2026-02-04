@@ -26,7 +26,16 @@ export function Login() {
     } catch (err: any) {
       let errorMessage = 'Login failed';
       
-      if (err?.response?.data) {
+      // Check for network errors
+      if (err?.code === 'ERR_NETWORK' || err?.message?.includes('Network Error')) {
+        errorMessage = 'Network error: Unable to connect to server. Please check your internet connection and try again.';
+        console.error('Network error details:', {
+          baseURL: err?.config?.baseURL,
+          url: err?.config?.url,
+          fullURL: err?.config?.baseURL + err?.config?.url,
+          error: err
+        });
+      } else if (err?.response?.data) {
         // Handle validation errors with details
         if (err.response.data.details && Array.isArray(err.response.data.details) && err.response.data.details.length > 0) {
           const errorMessages = err.response.data.details.map((detail: any) => {
