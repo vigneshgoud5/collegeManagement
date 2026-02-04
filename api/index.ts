@@ -74,16 +74,52 @@ async function ensureInitialized(): Promise<void> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Create serverless handler immediately (doesn't require DB)
+  // Extract path from request (handle both req.url and req.path)
+  // Remove query string if present
+  const rawPath = req.url || req.path || '';
+  const path = rawPath.split('?')[0]; // Remove query string
+  
+  // For health endpoint, respond immediately without any serverless handler overhead
+  // This must be checked FIRST before any imports or initialization
+  // Handle various path formats: /api/health, /health, health, etc.
+  const isHealthEndpoint = 
+    path === '/api/health' || 
+    path === '/health' ||
+    path.endsWith('/api/health') ||
+    path.endsWith('/health') ||
+    path.includes('/health');
+  
+  if (isHealthEndpoint && req.method === 'GET') {
+    // Respond immediately without checking DB or initializing anything
+    // Use try-catch to handle any potential mongoose import issues
+    try {
+      const dbStatus = mongoose.connection.readyState === 1 ? 'connected' : 'disconnected';
+      return res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        db: dbStatus,
+        uptime: process.uptime()
+      });
+    } catch (error) {
+      // If mongoose check fails, still return ok status
+      return res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        db: 'unknown',
+        uptime: process.uptime()
+      });
+    }
+  }
+
+  // Check if this route requires database connection
+  const requiresDB = !NO_DB_ROUTES.some(route => path.startsWith(route));
+
+  // Create serverless handler (only for non-health routes)
   if (!serverlessHandler) {
     serverlessHandler = serverless(app, {
       binary: ['image/*', 'application/pdf'],
     });
   }
-
-  // Check if this route requires database connection
-  const path = req.url || '';
-  const requiresDB = !NO_DB_ROUTES.some(route => path.startsWith(route));
 
   // For routes that don't require DB, handle immediately
   if (!requiresDB) {
