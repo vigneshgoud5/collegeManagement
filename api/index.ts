@@ -74,9 +74,9 @@ async function ensureInitialized(): Promise<void> {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Extract path from request (handle both req.url and req.path)
+  // Extract path from request (handle req.url only; req.path is not present in VercelRequest)
   // Remove query string if present
-  const rawPath = req.url || req.path || '';
+  const rawPath = req.url || '';
   const path = rawPath.split('?')[0]; // Remove query string
   
   // For health endpoint, respond immediately without any serverless handler overhead
