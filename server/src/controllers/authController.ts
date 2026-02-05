@@ -83,60 +83,71 @@ export async function register(req: Request, res: Response) {
   }
 
   try {
-    // Check if user already exists
-    const existing = await User.findOne({ email });
-    if (existing) {
-      return res.status(409).json({ message: 'Email already exists' });
-    }
+    // Add timeout protection for registration (8 seconds - leave 2s buffer for Vercel's 10s limit)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Registration operation timed out')), 8000)
+    );
 
-    // Hash password and create user
-    const passwordHash = await hashPassword(password);
-    const user = await User.create({ 
-      email, 
-      passwordHash, 
-      role, 
-      subRole: role === 'academic' ? subRole : undefined,
-      name: role === 'academic' ? name : undefined,
-      avatarUrl: role === 'academic' ? avatarUrl : undefined,
-      department: role === 'academic' ? department : undefined,
-      contact: role === 'academic' && contact ? { phone: contact.phone, address: contact.address } : undefined,
-      status: 'active' 
-    });
+    const registerOperation = async () => {
+      // Check if user already exists (use lean for faster query)
+      const existing = await User.findOne({ email }).lean();
+      if (existing) {
+        throw new Error('EMAIL_EXISTS');
+      }
 
-    // Create student profile if role is student
-    let profile = null;
-    if (role === 'student') {
-      const dobDate = dob ? new Date(dob) : undefined;
-      profile = await StudentProfile.create({
-        user: user._id,
-        firstName: firstName!,
-        lastName: lastName!,
-        dob: dobDate,
-        contact: contact || {},
-        department,
-        year,
-        avatarUrl,
+      // Hash password and create user
+      const passwordHash = await hashPassword(password);
+      const user = await User.create({ 
+        email, 
+        passwordHash, 
+        role, 
+        subRole: role === 'academic' ? subRole : undefined,
+        name: role === 'academic' ? name : undefined,
+        avatarUrl: role === 'academic' ? avatarUrl : undefined,
+        department: role === 'academic' ? department : undefined,
+        contact: role === 'academic' && contact ? { phone: contact.phone, address: contact.address } : undefined,
+        status: 'active' 
       });
-    }
 
-    // Auto-login after registration
-    const loginResult = await loginService({ email, password, role });
-    if (loginResult.ok) {
-      setAuthCookies(res, loginResult.accessToken, loginResult.refreshToken);
-    }
+      // Create student profile if role is student
+      let profile = null;
+      if (role === 'student') {
+        const dobDate = dob ? new Date(dob) : undefined;
+        profile = await StudentProfile.create({
+          user: user._id,
+          firstName: firstName!,
+          lastName: lastName!,
+          dob: dobDate,
+          contact: contact || {},
+          department,
+          year,
+          avatarUrl,
+        });
+      }
+
+      // Auto-login after registration (optimized loginService already uses lean)
+      const loginResult = await loginService({ email, password, role });
+      if (loginResult.ok) {
+        setAuthCookies(res, loginResult.accessToken, loginResult.refreshToken);
+      }
+
+      return { user, profile, loginResult };
+    };
+
+    const result = await Promise.race([registerOperation(), timeoutPromise]) as Awaited<ReturnType<typeof registerOperation>>;
 
     return res.status(201).json({
       user: { 
-        id: user.id, 
-        email: user.email, 
-        role: user.role, 
-        subRole: user.subRole,
-        name: user.name,
-        avatarUrl: user.avatarUrl,
-        department: user.department,
-        contact: user.contact,
+        id: result.user.id, 
+        email: result.user.email, 
+        role: result.user.role, 
+        subRole: result.user.subRole,
+        name: result.user.name,
+        avatarUrl: result.user.avatarUrl,
+        department: result.user.department,
+        contact: result.user.contact,
       },
-      profile,
+      profile: result.profile,
       message: 'Registration successful',
     });
   } catch (error: any) {
