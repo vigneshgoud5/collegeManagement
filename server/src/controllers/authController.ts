@@ -152,7 +152,23 @@ export async function register(req: Request, res: Response) {
     });
   } catch (error: any) {
     console.error('Registration error:', error);
-    return res.status(500).json({ message: 'Registration failed', error: error.message });
+    
+    if (error.message === 'Registration operation timed out') {
+      return res.status(503).json({ 
+        message: 'Service unavailable: Registration operation timed out',
+        code: 'TIMEOUT'
+      });
+    }
+    
+    if (error.message === 'EMAIL_EXISTS') {
+      return res.status(409).json({ message: 'Email already exists' });
+    }
+    
+    return res.status(500).json({ 
+      message: 'Registration failed', 
+      error: error.message,
+      code: 'INTERNAL_ERROR'
+    });
   }
 }
 
