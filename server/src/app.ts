@@ -63,7 +63,10 @@ const getAllowedOrigins = (): string[] | ((origin: string | undefined, callback:
   // In production, use a function to dynamically allow Vercel preview URLs
   if (env.NODE_ENV === 'production') {
     return (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-      if (!origin) return callback(null, false);
+      if (!origin) {
+        // Allow requests with no origin (e.g., Postman, curl)
+        return callback(null, true);
+      }
       
       // Allow exact matches
       if (origins.includes(origin)) {
@@ -71,11 +74,14 @@ const getAllowedOrigins = (): string[] | ((origin: string | undefined, callback:
       }
       
       // Allow Vercel preview URLs (pattern matching)
+      // Matches: *.vercel.app, *-*.vercel.app, etc.
       const vercelPreviewPattern = /^https:\/\/.*\.vercel\.app$/;
       if (vercelPreviewPattern.test(origin)) {
+        console.log(`✅ Allowing CORS for Vercel preview: ${origin}`);
         return callback(null, true);
       }
       
+      console.log(`❌ Blocking CORS for origin: ${origin}`);
       callback(null, false);
     };
   }

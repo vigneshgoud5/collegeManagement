@@ -13,7 +13,12 @@ export async function loginService(params: {
 }) {
   const { email, password, role } = params;
 
-  const user = await User.findOne({ email });
+  // Use .lean() for faster query (no Mongoose document overhead)
+  // Only select fields we need
+  const user = await User.findOne({ email })
+    .select('_id email passwordHash role subRole name avatarUrl department contact status')
+    .lean();
+  
   if (!user || user.status !== 'active') {
     return { ok: false as const, code: 'INVALID_CREDENTIALS' };
   }
@@ -27,20 +32,22 @@ export async function loginService(params: {
     return { ok: false as const, code: 'INVALID_CREDENTIALS' };
   }
 
-  const accessToken = signAccessToken(user.id, user.role);
-  const refreshToken = signRefreshToken(user.id, user.role);
+  // Convert _id to string for token generation
+  const userId = user._id.toString();
+  const accessToken = signAccessToken(userId, user.role);
+  const refreshToken = signRefreshToken(userId, user.role);
 
   return {
-        ok: true as const,
+    ok: true as const,
     user: {
-          id: user.id, 
+      id: userId,
       email: user.email,
       role: user.role,
-          subRole: user.subRole,
-          name: user.name,
-          avatarUrl: user.avatarUrl,
-          department: user.department,
-          contact: user.contact,
+      subRole: user.subRole,
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      department: user.department,
+      contact: user.contact,
     },
     accessToken,
     refreshToken,

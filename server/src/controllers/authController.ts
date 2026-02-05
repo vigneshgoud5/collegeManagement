@@ -16,14 +16,37 @@ export async function login(req: Request, res: Response) {
     return res.status(400).json({ message: 'email, password and role are required' });
   }
 
-  const result = await loginService({ email, password, role });
-  if (!result.ok) {
-    const status = result.code === 'ROLE_MISMATCH' ? 403 : 401;
-    return res.status(status).json({ message: 'Invalid credentials', code: result.code });
-  }
+  try {
+    // Add timeout protection for login (8 seconds - leave 2s buffer for Vercel's 10s limit)
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Login operation timed out')), 8000)
+    );
 
-  setAuthCookies(res, result.accessToken, result.refreshToken);
-  return res.json({ user: result.user });
+    const result = await Promise.race([
+      loginService({ email, password, role }),
+      timeoutPromise
+    ]) as Awaited<ReturnType<typeof loginService>>;
+
+    if (!result.ok) {
+      const status = result.code === 'ROLE_MISMATCH' ? 403 : 401;
+      return res.status(status).json({ message: 'Invalid credentials', code: result.code });
+    }
+
+    setAuthCookies(res, result.accessToken, result.refreshToken);
+    return res.json({ user: result.user });
+  } catch (error: any) {
+    console.error('Login route error:', error);
+    if (error.message === 'Login operation timed out') {
+      return res.status(503).json({ 
+        message: 'Service unavailable: Login operation timed out',
+        code: 'TIMEOUT'
+      });
+    }
+    return res.status(500).json({ 
+      message: 'Internal server error',
+      code: 'INTERNAL_ERROR'
+    });
+  }
 }
 
 export async function register(req: Request, res: Response) {
